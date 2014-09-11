@@ -7,6 +7,9 @@ creates a convenient way to get operations and row data without the limits of us
 
 **pg_kafka** is released under the MIT license (See LICENSE file).
 
+Shout out to the [pg_amqp extension](https://github.com/omniti-labs/pg_amqp) authors. I used their project as 
+a guide to teach myself how to write a PostgreSQL extension.
+
 ### Version Compatability
 This code is built with the following assumptions.  You may get mixed results if you deviate from these versions.
 
@@ -30,10 +33,28 @@ based distributions you can usually do something like this:
 You will also need to make sure the librdkafka library and it's header files have been installed. See their Github 
 page for further details.
 
-Once you have all of the prerequisites installed you should be able to just:
+If you have all of the prerequisites installed you should be able to just:
 
     make && make install
-    
+
+Once the extension has been installed you just need to enable it in postgresql.conf:
+
+    shared_preload_libraries = 'pg_kafka.so'
+
+And restart PostgreSQL.
+
+### Usage
+
+    -- insert broker information
+    insert into kafka.broker values ('localhost:9092');
+    -- produce a message
+    select kafka.produce('test_topic', 'my message');
+
+For something a bit more useful, consider setting this up on a trigger and producing a message for every INSERT, UPDATE, 
+and DELETE that happens on a table.
+
+If the kafka schema wasn't auto-created by installing the extension take a look at sql/kafka.sql.
+            
 ### Support
 
 File bug reports, feature requests and questions using

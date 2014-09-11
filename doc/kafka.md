@@ -27,7 +27,7 @@ A process starts and connects to PostgreSQL and runs:
 Upon process termination broker connections will be torn down.
 If there is a need to disconnect from a specific broker, one can call:
 
-    select kafka.close();
+    SELECT kafka.close();
 
 which will close the connection to the broker if it is connected and do nothing
 if it is already disconnected.
