@@ -1,4 +1,52 @@
-pg_kafka
-========
+# pg_kafka
 
-A PostgreSQL extension to produce messages to Apache Kafka.
+Version: 0.0.1
+
+**pg_kafka** is a PostgreSQL extension to produce messages to Apache Kafka. When combined with PostgreSQL it 
+creates a convenient way to get operations and row data without the limits of using LISTEN/NOTIFY.
+
+**pg_kafka** is released under the MIT license (See LICENSE file).
+
+### Version Compatability
+This code is built with the following assumptions.  You may get mixed results if you deviate from these versions.
+
+* [PostgreSQL](http://www.postgresql.org) 9.2+
+* [Kafka](http://kafka.apache.org) 0.8.1+
+* [librdkafka](https://github.com/edenhill/librdkafka) 0.8.x
+
+### Requirements
+* PostgreSQL
+* librdkafka
+* libsnappy
+* zlib
+
+### Building
+
+To build you will need to install PostgreSQL (for pg_config) and PostgreSQL server development packages. On Debian 
+based distributions you can usually do something like this:
+
+    apt-get install -y postgresql postgresql-server-dev-9.2
+    
+You will also need to make sure the librdkafka library and it's header files have been installed. See their Github 
+page for further details.
+
+Once you have all of the prerequisites installed you should be able to just:
+
+    make && make install
+    
+### Support
+
+File bug reports, feature requests and questions using
+[GitHub Issues](https://github.com/xstevens/pg_kafka/issues)
+
+### Notes
+
+Before implementing this project I had looked into LISTEN/NOTIFY operations in PostgreSQL. NOTIFY is unfortunately limited 
+to 8000 bytes for the total payload size. I also found several mentions in the PostgreSQL mailing lists that NOTIFY was 
+never intended to send row data; rather it was intended to get change notifications on keys to clean up external caching, etc. 
+
+So my next approach was trying to read PostgreSQL WAL data by creating a process that acted as a replication 
+client. This approach would have a number of advantages compared to being an extension in database (namely you wouldn't 
+potentially affect any transactions and you can run outside of the database). I successfully started receiving WAL data, 
+but I could not find any material on how to actually decode that data. If you know how to decode WAL data from PostgreSQL 
+please contact me via Github issues.
