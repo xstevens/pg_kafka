@@ -1,0 +1,7 @@
+# kafka extension
+comment = 'Apache Kafka support for PostgreSQL'
+default_version = '0.0.1'
+module_pathname = '$libdir/pg_kafka'
+relocatable = false
+schema = kafka
+
