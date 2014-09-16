@@ -31,42 +31,10 @@
 #include "fmgr.h"
 #include "executor/spi.h"
 #include "access/xact.h"
+#include "utils/builtins.h"
 #include "librdkafka/rdkafka.h"
 
-#ifdef PG_MODULE_MAGIC
 PG_MODULE_MAGIC;
-#endif
-
-#define set_bytes_from_text(var, col)                                          \
-  do {                                                                         \
-    if (!PG_ARGISNULL(col)) {                                                  \
-      text *txt = PG_GETARG_TEXT_PP(col);                                      \
-      var.bytes = VARDATA_ANY(txt);                                            \
-      var.len = VARSIZE_ANY_EXHDR(txt);                                        \
-    }                                                                          \
-  } while (0)
-
-typedef struct txt_bytes_t_ {
-  size_t len;
-  void *bytes;
-} txt_bytes_t;
-
-static txt_bytes_t cstring_txt_bytes_t(char const *cstr) {
-  txt_bytes_t result;
-  result.len = strlen(cstr);
-  result.bytes = (void *)cstr;
-  return result;
-}
-
-static char *txt_bytes_t_cstring(txt_bytes_t *txt) {
-  if (txt) {
-    int size = (txt->len + 1) * sizeof(char);
-    char *data = (char *)palloc0(size);
-    snprintf(data, size, "%s", (const char *)txt->bytes);
-    return data;
-  }
-  return NULL;
-}
 
 void _PG_init(void);
 Datum pg_kafka_produce(PG_FUNCTION_ARGS);
@@ -178,28 +146,28 @@ void _PG_init() { RegisterXactCallback(pg_xact_callback, NULL); }
 
 PG_FUNCTION_INFO_V1(pg_kafka_produce);
 Datum pg_kafka_produce(PG_FUNCTION_ARGS) {
-  if (!PG_ARGISNULL(0)) {
+  if (!PG_ARGISNULL(0) && !PG_ARGISNULL(1)) {
     /* get topic arg */
-    txt_bytes_t topic = cstring_txt_bytes_t("pg_kafka");
-    set_bytes_from_text(topic, 0);
+	text *topic_txt = PG_GETARG_TEXT_PP(0);
+	char *topic = text_to_cstring(topic_txt);
     /* get msg arg */
-    txt_bytes_t buf = cstring_txt_bytes_t("");
-    set_bytes_from_text(buf, 1);
+	text *msg_txt = PG_GETARG_TEXT_PP(1);
+	void *msg = VARDATA_ANY(msg_txt);
+	size_t msg_len = VARSIZE_ANY_EXHDR(msg_txt);
     /* create topic */
     rd_kafka_topic_conf_t *topic_conf = rd_kafka_topic_conf_new();
     rd_kafka_t *rk = get_rk();
     if (!rk) {
       PG_RETURN_BOOL(0 != 0);
     }
-    rd_kafka_topic_t *rkt =
-        rd_kafka_topic_new(rk, txt_bytes_t_cstring(&topic), topic_conf);
+    rd_kafka_topic_t *rkt = rd_kafka_topic_new(rk, topic, topic_conf);
 
     /* using random partition for now */
     int partition = RD_KAFKA_PARTITION_UA;
 
     /* send/produce message. */
-    int rv = rd_kafka_produce(rkt, partition, RD_KAFKA_MSG_F_COPY, buf.bytes,
-                              buf.len, NULL, 0, NULL);
+    int rv = rd_kafka_produce(rkt, partition, RD_KAFKA_MSG_F_COPY, msg,
+    						  msg_len, NULL, 0, NULL);
     if (rv == -1) {
       fprintf(stderr, "%% Failed to produce to topic %s partition %i: %s\n",
               rd_kafka_topic_name(rkt), partition,
@@ -210,6 +178,7 @@ Datum pg_kafka_produce(PG_FUNCTION_ARGS) {
 
     /* destroy kafka topic */
     rd_kafka_topic_destroy(rkt);
+    pfree(topic);
 
     PG_RETURN_BOOL(rv == 0);
   }
