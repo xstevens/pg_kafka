@@ -10,8 +10,8 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -148,12 +148,12 @@ PG_FUNCTION_INFO_V1(pg_kafka_produce);
 Datum pg_kafka_produce(PG_FUNCTION_ARGS) {
   if (!PG_ARGISNULL(0) && !PG_ARGISNULL(1)) {
     /* get topic arg */
-	text *topic_txt = PG_GETARG_TEXT_PP(0);
-	char *topic = text_to_cstring(topic_txt);
+    text *topic_txt = PG_GETARG_TEXT_PP(0);
+    char *topic = text_to_cstring(topic_txt);
     /* get msg arg */
-	text *msg_txt = PG_GETARG_TEXT_PP(1);
-	void *msg = VARDATA_ANY(msg_txt);
-	size_t msg_len = VARSIZE_ANY_EXHDR(msg_txt);
+    text *msg_txt = PG_GETARG_TEXT_PP(1);
+    void *msg = VARDATA_ANY(msg_txt);
+    size_t msg_len = VARSIZE_ANY_EXHDR(msg_txt);
     /* create topic */
     rd_kafka_topic_conf_t *topic_conf = rd_kafka_topic_conf_new();
     rd_kafka_t *rk = get_rk();
@@ -166,8 +166,8 @@ Datum pg_kafka_produce(PG_FUNCTION_ARGS) {
     int partition = RD_KAFKA_PARTITION_UA;
 
     /* send/produce message. */
-    int rv = rd_kafka_produce(rkt, partition, RD_KAFKA_MSG_F_COPY, msg,
-    						  msg_len, NULL, 0, NULL);
+    int rv = rd_kafka_produce(rkt, partition, RD_KAFKA_MSG_F_COPY, msg, msg_len,
+                              NULL, 0, NULL);
     if (rv == -1) {
       fprintf(stderr, "%% Failed to produce to topic %s partition %i: %s\n",
               rd_kafka_topic_name(rkt), partition,
