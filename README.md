@@ -70,5 +70,4 @@ never intended to send row data; rather it was intended to get change notificati
 So my next approach was trying to read PostgreSQL WAL data by creating a process that acted as a replication 
 client. This approach would have a number of advantages compared to being an extension in database (namely you wouldn't 
 potentially affect any transactions and you can run outside of the database). I successfully started receiving WAL data, 
-but I could not find any material on how to actually decode that data. If you know how to decode WAL data from PostgreSQL 
-please contact me via Github issues.
+but I could not find any material on how to actually decode that data. Fortunately as of Postgres 9.4 they have added Logical Decoding. I have started working on a logical decoding output plugin called [decoderbufs](https://github.com/xstevens/decoderbufs).
